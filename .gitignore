@@ -1,0 +1,13 @@
+.env
+.env.local
+node_modules/
+dist/
+tmp/
+bin/
+main
+*.exe
+*.log
+*.tsbuildinfo
+Admin Info.txt
+.agents/
+.vscode/

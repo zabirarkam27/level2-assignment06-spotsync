@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: spotsync-postgres
+    environment:
+      POSTGRES_USER: spotsync
+      POSTGRES_PASSWORD: spotsync_pass
+      POSTGRES_DB: spotsync
+    ports:
+      - "55432:5432"
+    volumes:
+      - spotsync_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spotsync -d spotsync"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  spotsync_pgdata:
