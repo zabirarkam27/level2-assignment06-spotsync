@@ -33,16 +33,11 @@ func (s *authService) Register(req dto.RegisterRequest) (*dto.UserResponse, erro
 		return nil, err
 	}
 
-	role := req.Role
-	if role == "" {
-		role = "driver"
-	}
-
 	user := models.User{
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: string(hashed),
-		Role:     role,
+		Role:     "driver",
 	}
 
 	if err := s.userRepo.Create(&user); err != nil {
