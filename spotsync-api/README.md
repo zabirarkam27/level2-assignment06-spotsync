@@ -2,6 +2,8 @@
 
 SpotSync is a clean-architecture Go API for smart parking and EV charging spot reservations.
 
+Live API: https://spotsync-api-8acf.onrender.com
+
 ## Features
 
 - Driver/admin authentication with JWT and bcrypt.

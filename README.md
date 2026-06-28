@@ -2,6 +2,11 @@
 
 SpotSync is a full-stack smart parking and EV charging reservation system for airports and malls.
 
+## Live URLs
+
+- Backend API: https://spotsync-api-8acf.onrender.com
+- Frontend: https://project-a7ord.vercel.app
+
 ## Projects
 
 - `spotsync-api`: Go, Echo, GORM, PostgreSQL backend.
@@ -98,7 +103,7 @@ cd spotsync-web && npm run build
 
 ## Deployment
 
-- Backend: Render, Railway, or Fly.io with `DATABASE_URL`, `JWT_SECRET`, and `FRONTEND_URL`.
+- Backend: Render with `DATABASE_URL`, `JWT_SECRET`, and `FRONTEND_URL`.
 - Database: NeonDB, Supabase, or Aiven PostgreSQL.
 - Frontend: Vercel with `VITE_API_URL` pointing to the deployed backend.
 
