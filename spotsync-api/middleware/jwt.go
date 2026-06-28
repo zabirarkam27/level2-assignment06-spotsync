@@ -10,12 +10,6 @@ import (
 	"github.com/zabirarkam27/level2-assignment06-spotsync/dto"
 )
 
-type JWTClaims struct {
-	UserID uint   `json:"user_id"`
-	Role   string `json:"role"`
-	jwt.RegisteredClaims
-}
-
 func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		authHeader := c.Request().Header.Get(echo.HeaderAuthorization)
@@ -27,7 +21,7 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &dto.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrTokenSignatureInvalid
 			}
@@ -40,7 +34,7 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			})
 		}
 
-		claims, ok := token.Claims.(*JWTClaims)
+		claims, ok := token.Claims.(*dto.JWTClaims)
 		if !ok {
 			return c.JSON(http.StatusUnauthorized, dto.APIResponse{
 				Success: false,

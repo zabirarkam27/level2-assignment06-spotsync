@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/zabirarkam27/level2-assignment06-spotsync/dto"
-	appmiddleware "github.com/zabirarkam27/level2-assignment06-spotsync/middleware"
 	"github.com/zabirarkam27/level2-assignment06-spotsync/models"
 	"github.com/zabirarkam27/level2-assignment06-spotsync/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -60,7 +59,7 @@ func (s *authService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 		return nil, ErrInvalidCredentials
 	}
 
-	claims := appmiddleware.JWTClaims{
+	claims := dto.JWTClaims{
 		UserID: user.ID,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{

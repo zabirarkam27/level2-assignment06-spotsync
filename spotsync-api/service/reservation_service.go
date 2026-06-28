@@ -36,7 +36,7 @@ func (s *reservationService) Create(userID uint, req dto.CreateReservationReques
 		}
 		return nil, err
 	}
-	return mapReservation(*reservation, false, false), nil
+	return mapReservation(*reservation, false, false, true), nil
 }
 
 func (s *reservationService) GetMine(userID uint) ([]dto.ReservationResponse, error) {
@@ -44,7 +44,7 @@ func (s *reservationService) GetMine(userID uint) ([]dto.ReservationResponse, er
 	if err != nil {
 		return nil, err
 	}
-	return mapReservations(reservations, false, true), nil
+	return mapReservations(reservations, false, true, false), nil
 }
 
 func (s *reservationService) GetAll() ([]dto.ReservationResponse, error) {
@@ -52,7 +52,7 @@ func (s *reservationService) GetAll() ([]dto.ReservationResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	return mapReservations(reservations, true, true), nil
+	return mapReservations(reservations, true, true, true), nil
 }
 
 func (s *reservationService) Cancel(userID, reservationID uint, role string) error {
@@ -71,23 +71,26 @@ func (s *reservationService) Cancel(userID, reservationID uint, role string) err
 	return s.reservationRepo.Cancel(reservationID)
 }
 
-func mapReservations(reservations []models.Reservation, includeUser, includeZone bool) []dto.ReservationResponse {
+func mapReservations(reservations []models.Reservation, includeUser, includeZone, includeIDs bool) []dto.ReservationResponse {
 	responses := make([]dto.ReservationResponse, 0, len(reservations))
 	for _, reservation := range reservations {
-		responses = append(responses, *mapReservation(reservation, includeUser, includeZone))
+		responses = append(responses, *mapReservation(reservation, includeUser, includeZone, includeIDs))
 	}
 	return responses
 }
 
-func mapReservation(reservation models.Reservation, includeUser, includeZone bool) *dto.ReservationResponse {
+func mapReservation(reservation models.Reservation, includeUser, includeZone, includeIDs bool) *dto.ReservationResponse {
 	response := &dto.ReservationResponse{
 		ID:           reservation.ID,
-		UserID:       reservation.UserID,
-		ZoneID:       reservation.ZoneID,
 		LicensePlate: reservation.LicensePlate,
 		Status:       reservation.Status,
 		CreatedAt:    reservation.CreatedAt,
-		UpdatedAt:    reservation.UpdatedAt,
+	}
+
+	if includeIDs {
+		response.UserID = &reservation.UserID
+		response.ZoneID = &reservation.ZoneID
+		response.UpdatedAt = &reservation.UpdatedAt
 	}
 
 	if includeUser && reservation.User.ID != 0 {

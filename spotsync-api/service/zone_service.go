@@ -35,7 +35,7 @@ func (s *zoneService) Create(req dto.CreateZoneRequest) (*dto.ZoneResponse, erro
 	if err := s.zoneRepo.Create(&zone); err != nil {
 		return nil, err
 	}
-	return s.zoneResponse(zone)
+	return s.zoneResponse(zone, false)
 }
 
 func (s *zoneService) GetAll() ([]dto.ZoneResponse, error) {
@@ -46,7 +46,7 @@ func (s *zoneService) GetAll() ([]dto.ZoneResponse, error) {
 
 	responses := make([]dto.ZoneResponse, 0, len(zones))
 	for _, zone := range zones {
-		response, err := s.zoneResponse(zone)
+		response, err := s.zoneResponse(zone, true)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +63,7 @@ func (s *zoneService) GetByID(id uint) (*dto.ZoneResponse, error) {
 		}
 		return nil, err
 	}
-	return s.zoneResponse(*zone)
+	return s.zoneResponse(*zone, true)
 }
 
 func (s *zoneService) Update(id uint, req dto.UpdateZoneRequest) (*dto.ZoneResponse, error) {
@@ -91,7 +91,7 @@ func (s *zoneService) Update(id uint, req dto.UpdateZoneRequest) (*dto.ZoneRespo
 	if err := s.zoneRepo.Update(zone); err != nil {
 		return nil, err
 	}
-	return s.zoneResponse(*zone)
+	return s.zoneResponse(*zone, false)
 }
 
 func (s *zoneService) Delete(id uint) error {
@@ -104,24 +104,28 @@ func (s *zoneService) Delete(id uint) error {
 	return nil
 }
 
-func (s *zoneService) zoneResponse(zone models.ParkingZone) (*dto.ZoneResponse, error) {
-	activeCount, err := s.zoneRepo.CountActiveReservations(zone.ID)
-	if err != nil {
-		return nil, err
-	}
-	available := zone.TotalCapacity - int(activeCount)
-	if available < 0 {
-		available = 0
+func (s *zoneService) zoneResponse(zone models.ParkingZone, includeAvailability bool) (*dto.ZoneResponse, error) {
+	response := &dto.ZoneResponse{
+		ID:            zone.ID,
+		Name:          zone.Name,
+		Type:          zone.Type,
+		TotalCapacity: zone.TotalCapacity,
+		PricePerHour:  zone.PricePerHour,
+		CreatedAt:     zone.CreatedAt,
+		UpdatedAt:     zone.UpdatedAt,
 	}
 
-	return &dto.ZoneResponse{
-		ID:             zone.ID,
-		Name:           zone.Name,
-		Type:           zone.Type,
-		TotalCapacity:  zone.TotalCapacity,
-		AvailableSpots: available,
-		PricePerHour:   zone.PricePerHour,
-		CreatedAt:      zone.CreatedAt,
-		UpdatedAt:      zone.UpdatedAt,
-	}, nil
+	if includeAvailability {
+		activeCount, err := s.zoneRepo.CountActiveReservations(zone.ID)
+		if err != nil {
+			return nil, err
+		}
+		available := zone.TotalCapacity - int(activeCount)
+		if available < 0 {
+			available = 0
+		}
+		response.AvailableSpots = &available
+	}
+
+	return response, nil
 }

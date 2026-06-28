@@ -22,12 +22,12 @@ type ReservationUserInfo struct {
 
 type ReservationResponse struct {
 	ID           uint                 `json:"id"`
-	UserID       uint                 `json:"user_id,omitempty"`
-	ZoneID       uint                 `json:"zone_id,omitempty"`
+	UserID       *uint                `json:"user_id,omitempty"`
+	ZoneID       *uint                `json:"zone_id,omitempty"`
 	LicensePlate string               `json:"license_plate"`
 	Status       string               `json:"status"`
 	User         *ReservationUserInfo `json:"user,omitempty"`
 	Zone         *ZoneInfo            `json:"zone,omitempty"`
 	CreatedAt    time.Time            `json:"created_at"`
-	UpdatedAt    time.Time            `json:"updated_at,omitempty"`
+	UpdatedAt    *time.Time           `json:"updated_at,omitempty"`
 }
