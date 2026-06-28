@@ -29,6 +29,10 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 func main() {
 	_ = godotenv.Load()
 
+	if len(os.Getenv("JWT_SECRET")) < 32 {
+		log.Fatal("JWT_SECRET must be set and at least 32 characters long")
+	}
+
 	db, err := config.ConnectDB()
 	if err != nil {
 		log.Fatal("failed to connect database: ", err)
