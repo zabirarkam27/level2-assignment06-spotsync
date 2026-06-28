@@ -1,81 +1,96 @@
 # SpotSync
 
-SpotSync is a full-stack smart parking and EV charging reservation system for airports and malls.
+SpotSync is a clean-architecture REST API for smart parking and EV charging reservations at busy airports and malls.
 
-## Live URLs
+## Live URL
 
 - Backend API: https://spotsync-api-8acf.onrender.com
-- Frontend: https://project-a7ord.vercel.app
-
-## Projects
-
-- `spotsync-api`: Go, Echo, GORM, PostgreSQL backend.
-- `spotsync-web`: React, TypeScript, Vite frontend.
 
 ## Features
 
-- Register and login with JWT authentication.
-- Driver and admin role support.
-- Public parking zone browsing with dynamic availability.
-- Transaction-safe parking reservations using PostgreSQL row locks.
-- Driver reservation list and cancellation.
-- Admin dashboard for zones and reservations.
+- User registration and login with JWT authentication.
+- Password hashing with bcrypt.
+- Driver and admin role-based authorization.
+- Public parking zone listing with dynamic available spot calculation.
+- Admin parking zone create, update, delete, and all-reservation access.
+- Authenticated reservation creation, own-reservation listing, and cancellation.
+- Transaction-safe reservation creation with PostgreSQL row-level locking to prevent overbooking.
+- Centralized API response and error formatting.
+
+## Tech Stack
+
+- Go 1.22+
+- Echo
+- GORM
+- PostgreSQL
+- go-playground/validator
+- golang-jwt/jwt/v5
+- bcrypt
 
 ## Architecture
 
-Backend requests follow strict clean architecture:
+The project follows strict clean architecture. Each layer has a separate responsibility:
 
 ```text
-HTTP request
-  -> handler: bind, validate, authorize, respond
-  -> service: business rules, JWT, bcrypt, ownership checks
-  -> repository: GORM database operations, preloads, transactions
+HTTP Request
+  -> Handler: bind request DTOs, validate input, read JWT context, return JSON responses
+  -> Service: business rules, password hashing, JWT creation, ownership and capacity checks
+  -> Repository: GORM queries, transactions, row locks, preloads
   -> PostgreSQL
 ```
 
-## Backend Setup
+Project folders:
 
-```bash
-cd spotsync-api
-cp .env.example .env
-go mod tidy
-go run .
+```text
+config/       database connection
+dto/          request and response DTOs
+handler/      HTTP handlers
+middleware/   JWT and role middleware
+models/       GORM models
+repository/   database access layer
+service/      business logic layer
 ```
 
-For a quick local PostgreSQL database, run this from the repository root:
+Dependencies are wired manually in `main.go`:
+
+```text
+Repository -> Service -> Handler -> Routes
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+JWT_SECRET=replace-with-a-long-random-secret-at-least-32-chars
+PORT=8080
+CORS_ALLOWED_ORIGINS=*
+```
+
+For local Docker PostgreSQL, run:
 
 ```bash
 docker compose up -d
 ```
 
-Then use this local database URL in `spotsync-api/.env`:
+Then use:
 
 ```env
-DATABASE_URL=postgresql://spotsync:spotsync_pass@localhost:5432/spotsync?sslmode=disable
+DATABASE_URL=postgresql://spotsync:spotsync_pass@localhost:55432/spotsync?sslmode=disable
 ```
 
-Required environment variables:
-
-```env
-DATABASE_URL=postgresql://user:password@host/spotsync?sslmode=require
-JWT_SECRET=replace-with-a-long-random-secret-at-least-32-chars
-PORT=8080
-FRONTEND_URL=http://localhost:5173
-```
-
-## Frontend Setup
+## Run Locally
 
 ```bash
-cd spotsync-web
-cp .env.example .env
-npm install
-npm run dev
+go mod tidy
+go run .
 ```
 
-Frontend environment:
+Health check:
 
-```env
-VITE_API_URL=http://localhost:8080/api/v1
+```bash
+GET http://localhost:8080/api/v1/health
 ```
 
 ## API Endpoints
@@ -94,20 +109,84 @@ VITE_API_URL=http://localhost:8080/api/v1
 | DELETE | `/api/v1/reservations/:id` | Authenticated |
 | GET | `/api/v1/reservations` | Admin |
 
+## Request Examples
+
+Register:
+
+```json
+{
+  "name": "John Doe",
+  "email": "john.doe@spotsync.com",
+  "password": "securePassword123",
+  "role": "driver"
+}
+```
+
+Login:
+
+```json
+{
+  "email": "john.doe@spotsync.com",
+  "password": "securePassword123"
+}
+```
+
+Create zone:
+
+```json
+{
+  "name": "Terminal 1 EV Charging",
+  "type": "ev_charging",
+  "total_capacity": 20,
+  "price_per_hour": 5.5
+}
+```
+
+Create reservation:
+
+```json
+{
+  "zone_id": 5,
+  "license_plate": "ABC-1234"
+}
+```
+
+## Response Format
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Operation completed successfully",
+  "data": {}
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errors": "Error details"
+}
+```
+
 ## Verification
 
 ```bash
-cd spotsync-api && go test ./...
-cd spotsync-web && npm run build
+go test ./...
 ```
 
 ## Deployment
 
-- Backend: Render with `DATABASE_URL`, `JWT_SECRET`, and `FRONTEND_URL`.
-- Database: NeonDB, Supabase, or Aiven PostgreSQL.
-- Frontend: Vercel with `VITE_API_URL` pointing to the deployed backend.
+The backend is deployed on Render and uses NeonDB PostgreSQL. Required deployment variables:
 
-Included deployment helpers:
+```env
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+JWT_SECRET=replace-with-a-long-random-secret-at-least-32-chars
+CORS_ALLOWED_ORIGINS=*
+```
 
-- `spotsync-api/render.yaml`
-- `spotsync-web/vercel.json`
+`render.yaml` is included for the backend service configuration.
