@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -23,6 +24,12 @@ func ConnectDB() (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(25)
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return nil, err
+	}
 
 	return db, nil
 }

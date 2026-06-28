@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -38,7 +40,9 @@ func main() {
 		log.Fatal("failed to connect database: ", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.ParkingZone{}, &models.Reservation{}); err != nil {
+	migrationCtx, cancelMigration := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancelMigration()
+	if err := db.WithContext(migrationCtx).AutoMigrate(&models.User{}, &models.ParkingZone{}, &models.Reservation{}); err != nil {
 		log.Fatal("failed to run migrations: ", err)
 	}
 
